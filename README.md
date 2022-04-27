@@ -10,7 +10,7 @@ https://codepen.io/knyttneve/pen/YzxEBew
 npm install crmenu
 ```
 
-## Demo
+## How to use
 
 ```js
 import ContextMenu from 'nice-right-menu'
