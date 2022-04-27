@@ -1,0 +1,11 @@
+{
+    "name": "crmenu",
+    "version": "1.0.1",
+    "description": "A beautiful right-click menu",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "kamtao",
+    "license": "ISC"
+}
