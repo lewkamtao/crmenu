@@ -1,6 +1,6 @@
 {
     "name": "crmenu",
-    "version": "1.0.3",
+    "version": "1.7.3",
     "description": "A beautiful right-click menu",
     "main": "index.js",
     "scripts": {

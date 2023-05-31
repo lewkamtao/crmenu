@@ -8,6 +8,8 @@ class ContextMenu {
         this.rightClickNode = null;
         this.dataId = null;
         this.isOpened = false;
+        this.listener = [];
+        this.contextMenu = null;
     }
 
     getTargetNode() {
@@ -31,10 +33,7 @@ class ContextMenu {
 
         this.menuItems.forEach((data, index) => {
             const item = this.createItemMarkup(data);
-            item.firstChild.setAttribute(
-                "style",
-                `animation-delay: ${index * 0.08}s`
-            );
+
             nodes.push(item);
         });
 
@@ -42,24 +41,33 @@ class ContextMenu {
     }
 
     createItemMarkup(data) {
-        const button = document.createElement("BUTTON");
         const item = document.createElement("LI");
-
-        button.innerHTML = data.content;
-        button.classList.add("contextMenu-button");
         item.classList.add("contextMenu-item");
-
         if (data.divider) item.setAttribute("data-divider", data.divider);
-        item.appendChild(button);
-
-        if (data.events && data.events.length !== 0) {
-            Object.entries(data.events).forEach((event) => {
-                const [key, value] = event;
-                button.addEventListener(key, value);
-            });
-        }
-
         return item;
+    }
+
+    updatedItem() {
+        this.menuItemsNode.forEach((node, i) => {
+            const button = document.createElement("BUTTON");
+            const _content = this.menuItems[i].content;
+            const _events = this.menuItems[i].events;
+            if (typeof _content === "function") {
+                button.innerHTML = _content();
+            } else {
+                button.innerHTML = _content;
+            }
+            button.setAttribute("style", `animation-delay: ${i * 0.08}s`);
+            button.classList.add("contextMenu-button");
+            node.innerHTML = "";
+            if (_events && _events.length !== 0) {
+                Object.entries(_events).forEach((event) => {
+                    const [key, value] = event;
+                    button.addEventListener(key, value);
+                });
+            }
+            node.appendChild(button);
+        });
     }
 
     renderMenu() {
@@ -69,7 +77,7 @@ class ContextMenu {
         menuContainer.setAttribute("data-theme", this.mode);
 
         this.menuItemsNode.forEach((item) => menuContainer.appendChild(item));
-
+        this.updatedItem();
         return menuContainer;
     }
 
@@ -80,14 +88,12 @@ class ContextMenu {
         }
     }
 
-    contextMenu(e) {
+    showMenu(e, contextMenu) {
         this.rightClickNode = e.target;
         this.dataId = e.target.dataset.id;
-        e.preventDefault();
         this.isOpened = true;
         const { clientX, clientY } = e;
         document.body.appendChild(contextMenu);
-
         const positionY =
             clientY + contextMenu.scrollHeight >= window.innerHeight ?
             window.innerHeight - contextMenu.scrollHeight - 20 :
@@ -100,27 +106,36 @@ class ContextMenu {
         contextMenu.setAttribute(
             "style",
             `--width: ${contextMenu.scrollWidth}px;
-        --height: ${contextMenu.scrollHeight}px;
-        --top: ${positionY}px;
-        --left: ${positionX}px;`
+      --height: ${contextMenu.scrollHeight}px;
+      --top: ${positionY}px;
+      --left: ${positionX}px;`
         );
-    }
-
-    destory() {
-        this.targetNode.forEach((target) => {
-            target.removeEventListener("contextmenu", contextMenu);
-        });
+        this.updatedItem();
     }
 
     init() {
-        const contextMenu = this.renderMenu();
-        document.addEventListener("click", () => this.closeMenu(contextMenu));
-        window.addEventListener("blur", () => this.closeMenu(contextMenu));
+        this.contextMenu = this.renderMenu();
+        this.targetNode = this.getTargetNode();
+        document.addEventListener("click", () => this.closeMenu(this.contextMenu));
+        document.addEventListener("contextmenu", () =>
+            this.closeMenu(this.contextMenu)
+        );
+        window.addEventListener("blur", () => this.closeMenu(this.contextMenu));
 
         this.targetNode.forEach((target) => {
-            target.addEventListener("contextmenu", contextMenu);
+            target.removeEventListener("contextmenu", (e) => {
+                this.showMenu(e, this.contextMenu);
+            });
+        });
+
+        this.targetNode.forEach((target) => {
+            target.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+                setTimeout(() => {
+                    this.showMenu(e, this.contextMenu);
+                }, 50);
+            });
         });
     }
 }
-
 exports = module.exports = ContextMenu;
